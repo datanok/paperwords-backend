@@ -32,15 +32,30 @@ class RoomManager {
         },
       },
       gameData: {
+        // Config (set once per match)
         wordLength: null,
+        totalRounds: 1,
+        // Scores (persist across rounds)
+        currentRound: 1,
+        hostWins: 0,
+        guestWins: 0,
+        // Per-round state
         hostWord: null,
         guestWord: null,
         hostGuesses: [],
         guestGuesses: [],
+        hostWordDisplay: null,
+        guestWordDisplay: null,
         currentTurn: PLAYER_ROLES.HOST,
-        winner: null,
+        roundWinner: null,
+        hostSolved: false,
+        guestSolved: false,
+        gameStarted: false,
         hostReady: false,
         guestReady: false,
+        hostReadyNext: false,
+        guestReadyNext: false,
+        winner: null,
       },
     };
 
@@ -146,6 +161,28 @@ class RoomManager {
     if (Object.keys(room.players).length === 0) {
       this.deleteRoom(roomId);
     }
+  }
+
+  resetRound(roomId) {
+    const room = this.getRoom(roomId);
+    if (!room) return;
+    room.gameData.hostWord = null;
+    room.gameData.guestWord = null;
+    room.gameData.hostGuesses = [];
+    room.gameData.guestGuesses = [];
+    room.gameData.hostWordDisplay = null;
+    room.gameData.guestWordDisplay = null;
+    room.gameData.currentTurn = PLAYER_ROLES.HOST;
+    room.gameData.roundWinner = null;
+    room.gameData.hostSolved = false;
+    room.gameData.guestSolved = false;
+    room.gameData.gameStarted = false;
+    room.gameData.hostReady = false;
+    room.gameData.guestReady = false;
+    room.gameData.hostReadyNext = false;
+    room.gameData.guestReadyNext = false;
+    room.state = ROOM_STATES.READY_FOR_WORDS;
+    room.lastActivity = Date.now();
   }
 
   setGameState(roomId, state) {

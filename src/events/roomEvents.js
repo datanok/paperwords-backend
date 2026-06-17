@@ -92,7 +92,7 @@ const setupRoomEvents = (io, roomManager) => {
           throw new Error('User or room not identified');
         }
 
-        const { wordLength } = data;
+        const { wordLength, rounds = 1 } = data;
         if (!isValidWordLength(wordLength)) {
           throw new Error(`Invalid word length: ${wordLength}. Must be between 4 and 8.`);
         }
@@ -103,12 +103,14 @@ const setupRoomEvents = (io, roomManager) => {
         }
 
         room.gameData.wordLength = wordLength;
+        room.gameData.totalRounds = Math.min(Math.max(1, rounds), 7);
         room.lastActivity = Date.now();
 
-        logger.info('Word length set', { roomId: socket.roomId, wordLength });
+        logger.info('Word length set', { roomId: socket.roomId, wordLength, rounds });
 
         io.to(socket.roomId).emit('game:wordLengthSet', {
           wordLength,
+          rounds: room.gameData.totalRounds,
           message: 'Word length selected. Now enter your secret word.',
         });
 

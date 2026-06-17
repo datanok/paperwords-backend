@@ -18,6 +18,7 @@ module.exports = {
     WAITING_FOR_GUEST: 'waiting_for_guest',
     READY_FOR_WORDS: 'ready_for_words',
     PLAYING: 'playing',
+    ROUND_ENDED: 'round_ended',
     FINISHED: 'finished',
   },
 
