@@ -8,6 +8,40 @@ const setupRoomEvents = (io, roomManager) => {
     socket.on('set_user', (userId) => {
       socket.userId = userId;
       logger.debug('User ID set for socket', { userId, socketId: socket.id });
+
+      // Restore room membership if this player was mid-game
+      const allRooms = roomManager.getAllRooms();
+      for (const room of allRooms) {
+        const player = room.players[userId];
+        if (!player) continue;
+
+        socket.roomId = room.id;
+        socket.join(room.id);
+        player.socketId = socket.id;
+        player.connected = true;
+        if (player.disconnectTimeout) {
+          clearTimeout(player.disconnectTimeout);
+          player.disconnectTimeout = null;
+        }
+
+        socket.emit('session_restored', {
+          roomId: room.id,
+          state: room.state,
+          playerRole: player.role,
+          wordLength: room.gameData.wordLength,
+          rounds: room.gameData.totalRounds,
+          currentRound: room.gameData.currentRound,
+          scores: { host: room.gameData.hostWins, guest: room.gameData.guestWins },
+          roundWinner: room.gameData.roundWinner,
+          currentTurn: room.gameData.currentTurn,
+          wordSubmitted: !!(userId === room.hostId ? room.gameData.hostWord : room.gameData.guestWord),
+          guestPresent: !!room.guestId,
+        });
+
+        socket.to(room.id).emit('room:playerReconnected', { playerId: userId });
+        logger.info('Session restored', { userId, roomId: room.id });
+        break;
+      }
     });
 
     socket.on('room:create', (data, callback) => {
